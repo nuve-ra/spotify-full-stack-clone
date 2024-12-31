@@ -1,8 +1,7 @@
 import React from 'react';
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import { Routes, Route } from 'react-router-dom';
-//import AddSong from './pages/AddSong.jsx';
 import AddAlbum from './pages/AddAlbum';
 import ListSong from './pages/ListSong';
 import ListAlbum from './pages/ListAlbum';
@@ -10,7 +9,8 @@ import SideBar from './components/SideBar';
 import NavBar from './components/NavBar';
 import AddSong from './pages/AddSong';
 
-export const url = "http://localhost:4000";
+// Use environment variable for API URL with fallback
+export const url = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const App = () => {
   return (
