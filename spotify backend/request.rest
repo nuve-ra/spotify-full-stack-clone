@@ -1,0 +1,7 @@
+POST http://localhost:4000/api/song/add
+Content-Type: application/json
+
+{
+    "title": "Song Title",
+    "artist": "Artist Name"
+}
