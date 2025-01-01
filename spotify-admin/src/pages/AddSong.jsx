@@ -1,26 +1,66 @@
-import React, { useState } from 'react';
-import { assets } from "../assets/assets";
+import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import axios from "axios";
-import { toast } from 'react-toastify';
-import { url } from '../App';
+import { url } from "../App";
+import { useNavigate } from "react-router-dom";
+import { FaImage, FaMusic } from 'react-icons/fa'; // Import icons
 
-export const AddSong = () => {
+const AddSong = () => {
   const [image, setImage] = useState(null);
   const [song, setSong] = useState(null);
   const [songName, setSongName] = useState("");
   const [songDescription, setSongDescription] = useState("");
+  const [album, setAlbum] = useState(""); 
+  const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+
+  useEffect(() => {
+    const fetchAlbums = async () => {
+      try {
+        const response = await axios.get(`${url}/api/album/list`);
+        if (response.data.success) {
+          setAlbums(response.data.albums);
+        }
+      } catch (error) {
+        console.error("Error fetching albums:", error);
+        toast.error("Failed to load albums");
+      }
+    };
+
+    fetchAlbums();
+  }, []);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      // Create preview URL for the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSongChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSong(file);
+      toast.success("Song file selected: " + file.name);
+    }
+  };
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    // Validation to ensure all fields are filled
-    if (!song || !image || !songName || !songDescription) {
-      toast.error("All fields are required, including song and image.");
+    if (!song || !image || !songName || !songDescription || !album) {
+      toast.error("All fields are required, including album, song and image.");
+      setLoading(false);
       return;
     }
-
-    setLoading(true);
 
     try {
       const formData = new FormData();
@@ -28,13 +68,9 @@ export const AddSong = () => {
       formData.append("des", songDescription);
       formData.append("image", image);
       formData.append("audio", song);
-
-      // Debug log
-      console.log("Sending form data with:");
-      console.log("- Song name:", songName);
-      console.log("- Description:", songDescription);
-      console.log("- Image file:", image.name);
-      console.log("- Audio file:", song.name);
+      formData.append("album", album);
+      
+      console.log('Adding song with album:', album); // Debug log
 
       const response = await axios.post(`${url}/api/song/add`, formData, {
         headers: {
@@ -43,126 +79,122 @@ export const AddSong = () => {
       });
 
       if (response.data.success) {
-        toast.success("Song Added Successfully");
+        toast.success("Song added successfully!");
         // Reset form
         setSongName("");
         setSongDescription("");
         setImage(null);
         setSong(null);
-        
-        // Reset file input fields
-        const songInput = document.getElementById('song');
-        const imageInput = document.getElementById('image');
-        if (songInput) songInput.value = '';
-        if (imageInput) imageInput.value = '';
-      } else {
-        toast.error(response.data.message || "Failed to add song");
+        setAlbum("");
+        setPreviewImage(null);
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else if (error.message) {
-        toast.error(error.message);
-      } else {
-        toast.error("Failed to upload song. Please try again.");
-      }
-    } finally {
-      setLoading(false);
+      console.error("Error adding song:", error);
+      toast.error("Failed to add song. Please try again.");
     }
+    setLoading(false);
   };
 
-  return loading ? (
-    <div className="grid place-items-center min-h-[80vh]">
-      <div className="w-16 h-16 place-self-center border-4 border-gray-400 border-t-green-800 rounded-full animate-spin"></div>
-    </div>
-  ) : (
-    <form onSubmit={onSubmitHandler} className="flex flex-col items-start gap-8 text-gray-600">
-      {/* Song File */}
-      <div className="flex gap-8">
-        <div className="flex flex-col gap-2">
-          <p>Upload Song</p>
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[#1F1F1F] to-black text-white p-8">
+      <h2 className="text-3xl font-bold mb-8 text-center">Add New Song</h2>
+      <form onSubmit={onSubmitHandler} className="max-w-2xl mx-auto space-y-6">
+        <div className="flex flex-col space-y-2">
+          <label className="text-lg">Song Name</label>
           <input
-            onChange={(e) => {
-              console.log("Selected song file:", e.target.files[0]);
-              setSong(e.target.files[0]);
-            }}
-            type="file"
-            id="song"
-            accept="audio/*"
-            hidden
+            type="text"
+            value={songName}
+            onChange={(e) => setSongName(e.target.value)}
+            className="bg-[#2A2A2A] p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="Enter song name"
           />
-          <label htmlFor="song">
-            <img
-              src={song ? assets.upload_added : assets.upload_song}
-              className="w-24 cursor-pointer"
-              alt="upload songs"
-            />
-          </label>
         </div>
-      </div>
 
-      {/* Image File */}
-      <div className="flex flex-col gap-4">
-        <p>Upload Image</p>
-        <input
-          onChange={(e) => {
-            console.log("Selected image file:", e.target.files[0]);
-            setImage(e.target.files[0]);
-          }}
-          type="file"
-          id="image"
-          accept="image/*"
-          hidden
-        />
-        <label htmlFor="image">
-          <img
-            src={image ? URL.createObjectURL(image) : assets.upload_area}
-            className="w-24 cursor-pointer"
-            alt="upload image"
+        <div className="flex flex-col space-y-2">
+          <label className="text-lg">Description</label>
+          <textarea
+            value={songDescription}
+            onChange={(e) => setSongDescription(e.target.value)}
+            className="bg-[#2A2A2A] p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 h-32"
+            placeholder="Enter song description"
           />
-        </label>
-      </div>
+        </div>
 
-      {/* Song Name */}
-      <div className="flex flex-col gap-2.5">
-        <p>Song Name</p>
-        <input
-          onChange={(e) => {
-            console.log("Song name updated:", e.target.value);
-            setSongName(e.target.value);
-          }}
-          value={songName}
-          type="text"
-          className="bg-transparent outline-green-600 border-2 border-gray-400 p-2.5 w-[max(40vw,250px)]"
-          placeholder="Type Here"
-        />
-      </div>
+        <div className="flex flex-col space-y-2">
+          <label className="text-lg">Album</label>
+          <select
+            value={album}
+            onChange={(e) => setAlbum(e.target.value)}
+            className="bg-[#2A2A2A] p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            <option value="">Select an album</option>
+            {albums.map((album) => (
+              <option key={album._id} value={album.name}>
+                {album.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* Song Description */}
-      <div className="flex flex-col gap-2.5">
-        <p>Song Description</p>
-        <input
-          onChange={(e) => {
-            console.log("Song description updated:", e.target.value);
-            setSongDescription(e.target.value);
-          }}
-          value={songDescription}
-          type="text"
-          className="bg-transparent outline-green-600 border-2 border-gray-400 p-2.5 w-[max(40vw,250px)]"
-          placeholder="Type Here"
-        />
-      </div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="flex flex-col items-center space-y-4">
+            <label className="w-full text-center p-4 bg-[#2A2A2A] rounded-lg cursor-pointer hover:bg-[#3A3A3A] transition-colors">
+              <div className="flex flex-col items-center space-y-2">
+                <FaImage className="text-4xl text-green-500" />
+                <span>Upload Image</span>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </label>
+            {previewImage && (
+              <div className="w-32 h-32 relative">
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+            )}
+          </div>
 
-      {/* Submit Button */}
-      <button
-        type="submit"
-        className="text-base bg-black text-white py-2.5 px-14 cursor-pointer"
-      >
-        ADD
-      </button>
-    </form>
+          <div className="flex flex-col items-center space-y-4">
+            <label className="w-full text-center p-4 bg-[#2A2A2A] rounded-lg cursor-pointer hover:bg-[#3A3A3A] transition-colors">
+              <div className="flex flex-col items-center space-y-2">
+                <FaMusic className="text-4xl text-green-500" />
+                <span>Upload Song</span>
+              </div>
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={handleSongChange}
+                className="hidden"
+              />
+            </label>
+            {song && (
+              <div className="text-sm text-green-500">
+                Selected: {song.name}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full p-4 rounded-lg font-bold ${
+            loading
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-green-500 hover:bg-green-600"
+          } transition-colors`}
+        >
+          {loading ? "Adding Song..." : "Add Song"}
+        </button>
+      </form>
+    </div>
   );
 };
 
