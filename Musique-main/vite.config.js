@@ -10,6 +10,17 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        format: 'es',
+        entryFileNames: '[name].[hash].mjs',
+        chunkFileNames: '[name].[hash].mjs',
+        assetFileNames: '[name].[hash][extname]'
+      }
+    }
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom']
   }
 })

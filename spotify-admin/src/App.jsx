@@ -9,7 +9,7 @@ import SideBar from './components/SideBar';
 import NavBar from './components/NavBar';
 import AddSong from './pages/AddSong';
 
-// Backend API URL
+// Backend API URL - Production
 export const url = "https://spotify-full-stack-clone.onrender.com";
 
 const App = () => {
