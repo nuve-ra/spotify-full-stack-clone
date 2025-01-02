@@ -7,11 +7,11 @@ const SongItem = ({ name, image, des, id }) => {
     return (
         <div 
             onClick={() => playWithId(id)}
-            className="bg-[#181818] p-4 rounded-lg hover:bg-[#282828] transition-all duration-300 cursor-pointer group"
+            className="bg-[#181818] p-4 rounded-lg hover:bg-[#282828] transition-all duration-300 cursor-pointer group min-w-[200px] max-w-[200px] mx-2 flex-shrink-0"
         >
             <div className="relative">
                 <img 
-                    className="w-full aspect-square object-cover rounded shadow-xl mb-4" 
+                    className="w-[180px] h-[180px] object-cover rounded shadow-xl mb-4" 
                     src={image}
                     alt={name}
                 />

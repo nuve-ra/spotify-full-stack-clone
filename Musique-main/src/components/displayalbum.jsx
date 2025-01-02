@@ -4,20 +4,30 @@ import {useParams} from "react-router-dom";
 import { assets } from './assets/frontend-assets/assets';
 import { PlayerContext } from './PlayerContext';
 
-export const DisplayAlbum = ({album}) => {
+export const DisplayAlbum = () => {
     const {id} = useParams();
-    const [albumData,setAlbumData]=useState("");
-    const {playWithId,albumsData,songsData}=useContext(PlayerContext);
+    const [albumData,setAlbumData]=useState(null);
+    const {playWithId, albumsData, songsData}=useContext(PlayerContext);
 
     useEffect(()=>{
-      albumsData.map((item)=>{
-        if(item._id===id){
-          setAlbumData(item);
-        }
-      })
+      console.log("Current Album ID from URL:", id);
+      console.log("All Albums Data:", albumsData);
+      console.log("All Songs Data:", songsData);
+      
+      const currentAlbum = albumsData.find((item) => {
+        console.log("Comparing album ID:", item._id, "with current ID:", id);
+        return item._id === id;
+      });
+
+      if (currentAlbum) {
+        console.log("Found Album:", currentAlbum);
+        setAlbumData(currentAlbum);
+      } else {
+        console.log("Album not found!");
+      }
     },[albumsData, id])
 
-  return album ? (
+  return albumData ? (
     <>
     <div>
         <Navbar/>
@@ -43,25 +53,34 @@ export const DisplayAlbum = ({album}) => {
           <img className="margin-auto w-4" src={assets.clock_icon} alt=""/>
         </div>
         <hr/>
-        {
-          songsData.filter((item)=>item.album === albumData.name).map((item,index)=>(
-            <div onClick={()=>playWithId(item._id)} key={index} className="grid grid-cols-3 sm:grid-cols-4 gap-2 p-2 items-center text-[#a7a7a7] hover:bg-[#ffffff2b] cursor-pointer"> 
-            <p className="text-white">
-              <b className="mr-4 text-color-[#a7a7a7]">{index+1}</b>
-              <img className="inline w-10 mr-5" src={item.image} alt="img"/>
-              {item.name}
-            </p>
-            <p className="text-[15px]">{albumData.name}</p>
-            <p className="text-[15px] hidden sm:block"> 5 days ago</p>
-            <p className="text-[15px] text-center">{item.duration}</p>
-            </div>
-          ))
-        }
-        <div>
-        </div>
+        {songsData && albumData && (
+          <>
+            {console.log("Filtering songs for album:", albumData._id)}
+            {songsData.map((song, index) => {
+              console.log("Checking song:", song.name, "Album ID:", song.album);
+              if (song.album === albumData._id) {
+                return (
+                  <div onClick={()=>playWithId(song._id)} key={index} className="grid grid-cols-3 sm:grid-cols-4 gap-2 p-2 items-center text-[#a7a7a7] hover:bg-[#ffffff2b] cursor-pointer"> 
+                    <p className="text-white">
+                      <b className="mr-4 text-color-[#a7a7a7]">{index+1}</b>
+                      <img className="inline w-10 mr-5" src={song.image} alt="img"/>
+                      {song.name}
+                    </p>
+                    <p className="text-[15px]">{albumData.name}</p>
+                    <p className="text-[15px] hidden sm:block"> 5 days ago</p>
+                    <p className="text-[15px] text-center">{song.duration}</p>
+                  </div>
+                );
+              }
+              return null;
+            }).filter(Boolean)}
+          </>
+        )}
     </div>
     </>
-  ) : null
+  ) : (
+    <div>Loading...</div>
+  );
 }
 
 export default DisplayAlbum;

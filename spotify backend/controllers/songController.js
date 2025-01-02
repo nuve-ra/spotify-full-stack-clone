@@ -4,13 +4,21 @@ import fs from 'fs';
 
 export const addSong = async (req, res) => {
     try {
-        const { name, des } = req.body;
+        const { name, des, artist, album } = req.body;
         const audioFile = req.files?.audio?.[0];
         const imageFile = req.files?.image?.[0];
 
         // Debug logging
         console.log('Request body:', req.body);
         console.log('Request files:', req.files);
+
+        // Validate required fields
+        if (!name || !des || !album) {
+            return res.status(400).json({
+                success: false,
+                message: "Name, description, and album are required"
+            });
+        }
 
         // Check if files are provided
         if (!audioFile || !imageFile) {
@@ -40,11 +48,15 @@ export const addSong = async (req, res) => {
         // Prepare song data
         const songData = {
             title: name,
+            artist: artist || "Unknown Artist",
+            album: album,  // Save the album ID
             image: imageUpload.secure_url,
             file: audioUpload.secure_url,
             des,
             duration,
         };
+        
+        console.log('Saving song with data:', songData);
         
         // Save the song in the database
         const song = new songModels(songData);
@@ -52,30 +64,46 @@ export const addSong = async (req, res) => {
 
         // Clean up uploaded files
         try {
-            if (audioFile.path) fs.unlinkSync(audioFile.path);
-            if (imageFile.path) fs.unlinkSync(imageFile.path);
-        } catch (cleanupError) {
-            console.error('Error cleaning up files:', cleanupError);
+            fs.unlinkSync(audioFile.path);
+            fs.unlinkSync(imageFile.path);
+        } catch (err) {
+            console.error('Error cleaning up files:', err);
         }
 
-        res.json({ 
-            success: true, 
-            message: "Song added successfully",
-            song: songData
+        res.status(201).json({
+            success: true,
+            song,
+            message: "Song added successfully"
         });
+
     } catch (error) {
         console.error('Error in addSong:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: "Error adding song", 
-            error: error.message 
+        
+        // Clean up uploaded files in case of error
+        if (req.files) {
+            Object.values(req.files).flat().forEach(file => {
+                try {
+                    fs.unlinkSync(file.path);
+                } catch (err) {
+                    console.error('Error cleaning up file:', err);
+                }
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: "Error adding song",
+            error: error.message
         });
     }
 };
 
 export const listSong = async (req, res) => {
     try {
-        const songs = await songModels.find().sort({ createdAt: -1 });
+        const songs = await songModels.find()
+            .select('title artist album image des file duration createdAt')
+            .sort({ createdAt: -1 });
+
         res.status(200).json({
             success: true,
             songs,
@@ -91,53 +119,96 @@ export const listSong = async (req, res) => {
     }
 };
 
+export const updateSong = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+
+        // Find and update the song
+        const updatedSong = await songModels.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true }
+        );
+
+        if (!updatedSong) {
+            return res.status(404).json({
+                success: false,
+                message: "Song not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            song: updatedSong,
+            message: "Song updated successfully"
+        });
+
+    } catch (error) {
+        console.error('Error in updateSong:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error updating song",
+            error: error.message
+        });
+    }
+};
+
 export const removeSong = async (req, res) => {
     try {
         const { id } = req.body;
-        
+
         if (!id) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "Song ID is required" 
+            return res.status(400).json({
+                success: false,
+                message: "Song ID is required"
             });
         }
 
-        // Find the song first to get the file URLs
+        // Find the song first to get the Cloudinary URLs
         const song = await songModels.findById(id);
+        
         if (!song) {
-            return res.status(404).json({ 
-                success: false, 
-                message: "Song not found" 
+            return res.status(404).json({
+                success: false,
+                message: "Song not found"
             });
         }
 
-        // Delete from Cloudinary if URLs exist
+        // Extract public IDs from URLs
+        const getPublicId = (url) => {
+            const splits = url.split('/');
+            const filename = splits[splits.length - 1];
+            const publicId = `spotify/${splits[splits.length - 2]}/${filename.split('.')[0]}`;
+            return publicId;
+        };
+
+        // Delete files from Cloudinary
         try {
             if (song.file) {
-                const audioPublicId = song.file.split('/').slice(-1)[0].split('.')[0];
-                await cloudinary.uploader.destroy(audioPublicId, { resource_type: "video" });
+                await cloudinary.uploader.destroy(getPublicId(song.file), { resource_type: "video" });
             }
             if (song.image) {
-                const imagePublicId = song.image.split('/').slice(-1)[0].split('.')[0];
-                await cloudinary.uploader.destroy(imagePublicId, { resource_type: "image" });
+                await cloudinary.uploader.destroy(getPublicId(song.image));
             }
         } catch (cloudinaryError) {
-            console.error('Error deleting files from Cloudinary:', cloudinaryError);
+            console.error('Error deleting from Cloudinary:', cloudinaryError);
         }
 
-        // Delete from database
+        // Delete song from database
         await songModels.findByIdAndDelete(id);
-        
-        res.json({ 
-            success: true, 
-            message: "Song removed successfully" 
+
+        res.status(200).json({
+            success: true,
+            message: "Song deleted successfully"
         });
+
     } catch (error) {
         console.error('Error in removeSong:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: "Error removing song", 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            message: "Error deleting song",
+            error: error.message
         });
     }
 };

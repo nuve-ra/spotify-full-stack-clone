@@ -1,4 +1,5 @@
 import React, { useContext } from "react";
+import { Routes, Route } from "react-router-dom";
 import Sidebar from "./components/sidebar.jsx";
 import Player from "./components/player.jsx";
 import Display from "./components/display.jsx";
@@ -14,7 +15,9 @@ const App = () => {
             <ToastContainer position="top-right" autoClose={3000} />
             <div className="h-[90%] flex">
                 <Sidebar />
-                <Display />
+                <Routes>
+                    <Route path="/*" element={<Display />} />
+                </Routes>
             </div>
             {songsData.length > 0 && <Player />}
             {track && <audio ref={audioRef} src={track ? track.file : ""} preload="auto"></audio>}

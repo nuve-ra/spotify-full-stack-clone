@@ -11,6 +11,7 @@ import path from 'path';
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 4000;
 
 // Ensure uploads directory exists
 const uploadsDir = './uploads';
@@ -19,7 +20,17 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? [
+        process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app',
+        process.env.ADMIN_URL || 'https://your-admin-domain.vercel.app'
+      ]
+    : ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -32,17 +43,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
-
-// Connect to Cloudinary
-ConnectCloudinary();
-
 // Routes
 app.use('/api/song', songRoutes);
 app.use('/api/album', albumRoutes);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is running' });
+});
 
 // 404 handler
 app.use((req, res) => {
@@ -52,12 +60,26 @@ app.use((req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ success: false, message: err.message || 'Something went wrong!' });
+  console.error(err.stack);
+  res.status(500).json({ 
+    success: false, 
+    message: process.env.NODE_ENV === 'production' 
+      ? 'Internal Server Error' 
+      : err.message 
+  });
 });
 
-const PORT = process.env.PORT || 4000;
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+  });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Connect to Cloudinary
+ConnectCloudinary();
