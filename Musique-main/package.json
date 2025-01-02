@@ -1,5 +1,5 @@
 {
-  "name": "vite-project",
+  "name": "musique-main",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,24 +10,22 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "axios": "^1.7.9",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-router-dom": "6.20.0"
+    "axios": "^1.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.14.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.15.0",
-    "@types/react": "^18.2.45",
-    "@types/react-dom": "^18.2.18",
-    "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.16",
-    "eslint": "^8.56.0",
-    "eslint-plugin-react": "^7.33.2",
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6",
+    "@vitejs/plugin-react": "^4.0.1",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.44.0",
+    "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.5",
-    "globals": "^15.12.0",
-    "postcss": "^8.4.32",
-    "tailwindcss": "^3.4.0",
-    "vite": "^5.4.11"
+    "eslint-plugin-react-refresh": "^0.4.1",
+    "postcss": "^8.4.25",
+    "tailwindcss": "^3.3.2",
+    "vite": "^4.4.0"
   }
 }
