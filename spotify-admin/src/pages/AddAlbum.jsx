@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import axios from "axios";
 import { toast } from 'react-toastify';
 import { url } from '../App';
-import { ChromePicker } from 'react-color';
 import { FaImage } from 'react-icons/fa';
 import { IoColorPaletteSharp } from 'react-icons/io5';
 

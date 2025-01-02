@@ -19,7 +19,7 @@ const ListSong = () => {
 
   const fetchSongs = async () => {
     try {
-      const response = await axios.get(`${url}/api/song/list`);
+      const response = await axios.get(`${url}/api/song/all`);
       if (response.data.success) {
         setSongs(response.data.songs);
       } else {
@@ -39,7 +39,7 @@ const ListSong = () => {
     }
 
     try {
-      const response = await axios.post(`${url}/api/song/remove`, { id: songId });
+      const response = await axios.delete(`${url}/api/song/delete/${songId}`);
       if (response.data.success) {
         toast.success("Song deleted successfully");
         fetchSongs(); // Refresh the list

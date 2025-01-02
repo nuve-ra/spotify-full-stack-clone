@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { url } from '../App';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { url } from "../App";
+import { toast } from "react-toastify";
 import { FaTrash } from 'react-icons/fa';
 
 const ListAlbum = () => {
@@ -14,7 +14,7 @@ const ListAlbum = () => {
 
   const fetchAlbums = async () => {
     try {
-      const response = await axios.get(`${url}/api/album/list`);
+      const response = await axios.get(`${url}/api/album/all`);
       if (response.data.success) {
         setAlbums(response.data.albums);
       } else {
@@ -34,7 +34,7 @@ const ListAlbum = () => {
     }
 
     try {
-      const response = await axios.post(`${url}/api/album/remove`, { id: albumId });
+      const response = await axios.delete(`${url}/api/album/delete/${albumId}`);
       if (response.data.success) {
         toast.success("Album deleted successfully");
         fetchAlbums(); // Refresh the list

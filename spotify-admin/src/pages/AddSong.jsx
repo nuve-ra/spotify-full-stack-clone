@@ -18,7 +18,7 @@ const AddSong = () => {
   useEffect(() => {
     const fetchAlbums = async () => {
       try {
-        const response = await axios.get(`${url}/api/album/list`);
+        const response = await axios.get(`${url}/api/album/all`);
         if (response.data.success) {
           setAlbums(response.data.albums);
         }
@@ -129,7 +129,7 @@ const AddSong = () => {
           >
             <option value="">Select an album</option>
             {albums.map((album) => (
-              <option key={album._id} value={album.name}>
+              <option key={album._id} value={album._id}>
                 {album.name}
               </option>
             ))}
