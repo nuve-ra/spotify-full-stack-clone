@@ -9,8 +9,8 @@ import SideBar from './components/SideBar';
 import NavBar from './components/NavBar';
 import AddSong from './pages/AddSong';
 
-// Use environment variable for API URL with fallback
-export const url = import.meta.env.VITE_API_URL || "http://localhost:4000";
+// Backend API URL
+export const url = "https://spotify-full-stack-clone.onrender.com";
 
 const App = () => {
   return (

@@ -1,61 +1,41 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import songRoutes from './routes/songRoutes.js';
-import albumRoutes from './routes/albumRoutes.js';
-import ConnectCloudinary from './config/cloudinary.js';
-import fs from 'fs';
-import path from 'path';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import songRoutes from "./routes/songRoutes.js";
+import albumRoutes from "./routes/albumRoutes.js";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
-
-// Ensure uploads directory exists
-const uploadsDir = './uploads';
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
 
 // Middleware
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [
-        process.env.FRONTEND_URL || 'https://your-frontend-domain.vercel.app',
-        process.env.ADMIN_URL || 'https://your-admin-domain.vercel.app'
-      ]
-    : ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Debug middleware
-app.use((req, res, next) => {
-  console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  console.log('Files:', req.files);
-  next();
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET_KEY,
 });
+
+// MongoDB connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 // Routes
-app.use('/api/song', songRoutes);
-app.use('/api/album', albumRoutes);
+app.use("/api/song", songRoutes);
+app.use("/api/album", albumRoutes);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Server is running' });
-});
-
-// 404 handler
-app.use((req, res) => {
-  console.log(`404 - Not Found: ${req.method} ${req.path}`);
-  res.status(404).json({ success: false, message: 'Endpoint not found' });
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", message: "Server is running" });
 });
 
 // Error handling middleware
@@ -63,23 +43,24 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
     success: false, 
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Internal Server Error' 
-      : err.message 
+    message: "Something went wrong!", 
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined 
   });
 });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-  });
+// Handle 404
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
 
-// Connect to Cloudinary
-ConnectCloudinary();
+const PORT = process.env.PORT || 3001;
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+// For Vercel
+export default app;

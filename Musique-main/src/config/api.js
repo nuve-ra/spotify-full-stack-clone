@@ -1,18 +1,18 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_BASE_URL = 'https://spotify-full-stack-clone.onrender.com';
 
 export const endpoints = {
     // Songs
-    songsList: `${API_BASE_URL}/api/song/list`,
+    getAllSongs: `${API_BASE_URL}/api/song/all`,
     addSong: `${API_BASE_URL}/api/song/add`,
+    updateSong: `${API_BASE_URL}/api/song/update`,
     
     // Albums
-    albumsList: `${API_BASE_URL}/api/album/list`,
+    getAllAlbums: `${API_BASE_URL}/api/album/all`,
     addAlbum: `${API_BASE_URL}/api/album/add`,
     getAlbumById: (id) => `${API_BASE_URL}/api/album/${id}`,
     
     // Song Operations
     getSongById: (id) => `${API_BASE_URL}/api/song/${id}`,
-    updateSong: (id) => `${API_BASE_URL}/api/song/update/${id}`,
     deleteSong: (id) => `${API_BASE_URL}/api/song/delete/${id}`,
 };
 
