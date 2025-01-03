@@ -20,7 +20,11 @@ const albumSchema = new mongoose.Schema({
     image: {
         type: String,
         required: true
-    }
+    },
+    songs: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Song'
+    }]
 }, {
     timestamps: true
 });

@@ -11,7 +11,7 @@ import AddSong from './pages/AddSong';
 import { PlayerProvider } from './context/PlayerContext';
 
 // Backend API URL - Production
-export const url = "https://spotify-full-stack-clone.onrender.com";
+export const url = 'https://spotify-backend-jbda.onrender.com/';
 
 function App() {
   return (

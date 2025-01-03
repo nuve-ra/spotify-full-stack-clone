@@ -27,6 +27,8 @@ const PlayerContextProvider = (props) => {
             second: 0
         }
     });
+    const [lastClickedId, setLastClickedId] = useState(null);
+    const [lastClickTime, setLastClickTime] = useState(0);
 
     const play = async () => {
         if (track) {
@@ -41,12 +43,64 @@ const PlayerContextProvider = (props) => {
     }
 
     const playWithId = async (id) => {
+        const now = Date.now();
+        
+        if (id === lastClickedId && now - lastClickTime < 500) {
+            // Double click detected
+            toast.info("Song is already selected! 🎵", {
+                position: "top-right",
+                autoClose: 2000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+            });
+            return;
+        }
+
         const songToPlay = songsData.find(item => item._id === id);
         if (songToPlay) {
-            setTrack(songToPlay);
-            await audioRef.current.play();
-            setPlayStatus(true);
+            if (track && track._id === id) {
+                // Same song clicked
+                if (playStatus) {
+                    pause();
+                    toast.info("Song paused ⏸️", {
+                        position: "top-right",
+                        autoClose: 2000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
+                } else {
+                    await play();
+                    toast.success("Song resumed ▶️", {
+                        position: "top-right",
+                        autoClose: 2000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                    });
+                }
+            } else {
+                // New song selected
+                setTrack(songToPlay);
+                await audioRef.current.play();
+                setPlayStatus(true);
+                toast.success(`Now playing: ${songToPlay.name} 🎵`, {
+                    position: "top-right",
+                    autoClose: 2000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                });
+            }
         }
+
+        setLastClickedId(id);
+        setLastClickTime(now);
     }
 
     const previous = async () => {
@@ -150,27 +204,58 @@ const PlayerContextProvider = (props) => {
         }
     }
 
-    // Handle audio time updates
     useEffect(() => {
         if (audioRef.current) {
-            audioRef.current.ontimeupdate = () => {
+            // Handle metadata loading (duration and other track info)
+            audioRef.current.onloadedmetadata = () => {
                 const totalMinute = Math.floor(audioRef.current.duration / 60);
                 const totalSecond = Math.floor(audioRef.current.duration % 60);
-                const currentMinute = Math.floor(audioRef.current.currentTime / 60);
-                const currentSecond = Math.floor(audioRef.current.currentTime % 60);
+                setTime(prev => ({
+                    ...prev,
+                    totalTime: {
+                        minute: totalMinute,
+                        second: totalSecond < 10 ? `0${totalSecond}` : totalSecond
+                    }
+                }));
+            };
 
-                if (seekBar.current) {
-                    const progressWidth = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-                    seekBar.current.style.width = progressWidth + "%";
+            // Handle time updates during playback
+            audioRef.current.ontimeupdate = () => {
+                if (!isNaN(audioRef.current.duration)) {
+                    const currentMinute = Math.floor(audioRef.current.currentTime / 60);
+                    const currentSecond = Math.floor(audioRef.current.currentTime % 60);
+                    const totalMinute = Math.floor(audioRef.current.duration / 60);
+                    const totalSecond = Math.floor(audioRef.current.duration % 60);
+
+                    setTime({
+                        currentTime: {
+                            minute: currentMinute,
+                            second: currentSecond < 10 ? `0${currentSecond}` : currentSecond
+                        },
+                        totalTime: {
+                            minute: totalMinute,
+                            second: totalSecond < 10 ? `0${totalSecond}` : totalSecond
+                        }
+                    });
+
+                    if (seekBar.current) {
+                        const progressWidth = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+                        seekBar.current.style.width = `${progressWidth}%`;
+                    }
                 }
+            };
 
-                setTime({
-                    currentTime: { minute: currentMinute, second: currentSecond },
-                    totalTime: { minute: totalMinute, second: totalSecond }
-                })
+            // Handle seeking
+            if (seekBg.current) {
+                seekBg.current.onclick = (e) => {
+                    if (!isNaN(audioRef.current.duration)) {
+                        const seekPosition = (e.nativeEvent.offsetX / seekBg.current.offsetWidth);
+                        audioRef.current.currentTime = seekPosition * audioRef.current.duration;
+                    }
+                };
             }
         }
-    }, [audioRef.current]);
+    }, [track]); // Re-run when track changes
 
     // Fetch initial data
     useEffect(() => {

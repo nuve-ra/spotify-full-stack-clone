@@ -100,12 +100,16 @@ export const addSong = async (req, res) => {
 
 export const listSong = async (req, res) => {
     try {
+        console.log('Fetching songs...');
         const songs = await songModels.find()
             .select('title artist album image des file duration createdAt')
             .sort({ createdAt: -1 });
-
+        
+        console.log('Found songs:', songs.length);
+        
         res.status(200).json({
             success: true,
+            count: songs.length,
             songs,
             message: "Songs fetched successfully"
         });
@@ -114,7 +118,8 @@ export const listSong = async (req, res) => {
         res.status(500).json({ 
             success: false, 
             message: "Error fetching songs", 
-            error: error.message 
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 };

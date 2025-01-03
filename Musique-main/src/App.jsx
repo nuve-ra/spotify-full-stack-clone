@@ -13,7 +13,7 @@ const App = () => {
     return (
         <div className="h-screen bg-black">
             <ToastContainer position="top-right" autoClose={3000} />
-            <div className="h-[90%] flex">
+            <div className="h-full pb-20 flex">
                 <Sidebar />
                 <Routes>
                     <Route path="/*" element={<Display />} />

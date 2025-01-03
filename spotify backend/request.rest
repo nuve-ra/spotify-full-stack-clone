@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 POST http://localhost:4000/api/song/add
 Content-Type: application/json
 
 {
     "title": "Song Title",
     "artist": "Artist Name"
+=======
+POST http://localhost:4000/api/song/add
+Content-Type: application/json
+
+{
+    "title": "Song Title",
+    "artist": "Artist Name"
+>>>>>>> 59fa177a0798ec0899eece689535d4e7df5e3ccd
 }

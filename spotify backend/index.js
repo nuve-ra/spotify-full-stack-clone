@@ -6,7 +6,7 @@ import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import songRoutes from "./routes/songRoutes.js";
-import albumRoutes from "./routes/albumRoutes.js";
+import albumRoutes from "./routes/albumRoute.js";
 
 dotenv.config();
 
@@ -28,6 +28,11 @@ cloudinary.config({
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
+
+// Test endpoint
+app.get("/test", (req, res) => {
+  res.json({ message: "Server is working!" });
+});
 
 // Routes
 app.use("/api/song", songRoutes);

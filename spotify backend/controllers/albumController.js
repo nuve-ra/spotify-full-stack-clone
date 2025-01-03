@@ -35,11 +35,24 @@ export const addAlbum = async (req, res) => {
 
 export const listAlbum = async (req, res) => {
     try {
+        console.log('Fetching albums...');
         const albums = await albumModels.find().sort({ createdAt: -1 });
-        res.json({ success: true, albums });
+        console.log('Found albums:', albums.length);
+        
+        res.status(200).json({ 
+            success: true, 
+            count: albums.length,
+            albums,
+            message: "Albums fetched successfully"
+        });
     } catch (error) {
         console.error("Error in listAlbum:", error);
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: "Error fetching albums",
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
@@ -70,5 +83,32 @@ export const removeAlbum = async (req, res) => {
     } catch (error) {
         console.error("Error in removeAlbum:", error);
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getAlbumSongs = async (req, res) => {
+    try {
+        const { albumId } = req.params;
+        const album = await albumModels.findById(albumId).populate('songs');
+        
+        if (!album) {
+            return res.status(404).json({
+                success: false,
+                message: "Album not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            songs: album.songs || [],
+            message: "Songs fetched successfully"
+        });
+    } catch (error) {
+        console.error("Error in getAlbumSongs:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching songs",
+            error: error.message
+        });
     }
 };
