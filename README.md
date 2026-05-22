@@ -35,7 +35,20 @@ A full-stack Spotify clone with admin panel for managing songs and albums.
 - MongoDB
 - Cloudinary Account
 - Git
+  
+## Distributed Systems & DevOps
+Redis
+BullMQ
+Docker
 
+## ⚙️ Getting Started
+Prerequisites
+Node.js (v14+)
+MongoDB
+Redis
+Docker
+Cloudinary Account
+Git
 ### Installation
 
 1. Clone the repository
@@ -93,6 +106,29 @@ npm run dev
    - Add `VITE_API_URL` pointing to your Render backend URL
 4. Deploy
 
+updates
+## 🏗️ System Architecture
+React Frontend
+       ↓
+Express.js Backend API
+       ↓
+MongoDB Database
+       ↓
+Redis Cache & Queue Layer
+       ↓
+BullMQ Workers
+
+## 🧠 Advanced Concepts Implemented
+1. Asynchronous processing
+2. Worker-based architecture
+3. Distributed-system basics
+4. Queue systems using BullMQ
+5. Redis caching strategies
+6. Event-driven backend workflows
+7. API optimization
+8. Modular MVC architecture
+9. Cloud media handling
+10. 
 ## Environment Variables
 
 ### Backend (.env)
